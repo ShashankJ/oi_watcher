@@ -1,7 +1,10 @@
 import asyncio
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from . import upstox_api, database, models, crud
+import upstox_api
+import database
+import models
+import crud
 from decouple import config
 
 app = FastAPI()
