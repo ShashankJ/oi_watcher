@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nifty 50 OI Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            width: 80%;
+            max-width: 1200px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Nifty 50 Option Chain OI Analysis</h1>
+        <canvas id="oiChart"></canvas>
+        <h2>Put-Call Ratio (PCR)</h2>
+        <p id="pcrValue" style="text-align:center; font-size: 24px; color: #007bff;">-</p>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetch('/api/oi_data')
+                .then(response => response.json())
+                .then(data => {
+                    const callData = data.calls;
+                    const putData = data.puts;
+                    const pcr = data.pcr;
+
+                    const allStrikes = [...new Set([...callData.map(d => d.strike_price), ...putData.map(d => d.strike_price)])].sort((a, b) => a - b);
+
+                    const callOiChanges = allStrikes.map(strike => {
+                        const strikeData = callData.find(d => d.strike_price === strike);
+                        return strikeData ? strikeData.oi_change : 0;
+                    });
+
+                    const putOiChanges = allStrikes.map(strike => {
+                        const strikeData = putData.find(d => d.strike_price === strike);
+                        return strikeData ? strikeData.oi_change : 0;
+                    });
+
+                    const ctx = document.getElementById('oiChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: allStrikes,
+                            datasets: [{
+                                label: 'Call OI Change',
+                                data: callOiChanges,
+                                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1
+                            }, {
+                                label: 'Put OI Change',
+                                data: putOiChanges,
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Change in Open Interest'
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Strike Price'
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    document.getElementById('pcrValue').innerText = pcr.toFixed(2);
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        });
+    </script>
+</body>
+</html>
