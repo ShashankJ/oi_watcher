@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
-from . import models
+import models
+
 
 def save_option_data(db: Session, option_data_list: list[models.OptionData]):
     """
@@ -7,6 +8,7 @@ def save_option_data(db: Session, option_data_list: list[models.OptionData]):
     """
     db.add_all(option_data_list)
     db.commit()
+
 
 def get_latest_option_data(db: Session):
     """
