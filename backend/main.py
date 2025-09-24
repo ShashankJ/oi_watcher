@@ -1,7 +1,9 @@
 import asyncio
+import json
+from datetime import datetime
+import random
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-import upstox_api
 import database
 import models
 import crud
@@ -10,7 +12,6 @@ from decouple import config
 app = FastAPI()
 
 # Configuration
-ACCESS_TOKEN = config('UPSTOX_ACCESS_TOKEN')
 EXPIRY_DATE = config('EXPIRY_DATE')
 POLLING_INTERVAL = config('POLLING_INTERVAL', default=300, cast=int)
 
@@ -26,76 +27,76 @@ def get_db():
 
 async def poll_data():
     """
-    The background task that polls data from the Upstox API and stores it in the database.
+    The background task that polls data and stores it in the database.
     """
     while True:
         print("Polling data...")
-        nifty_key = upstox_api.get_nifty_50_instrument_key()
-        if not nifty_key:
-            print("Could not get Nifty 50 instrument key. Skipping poll.")
+        # Hardcoded spot price as we cannot fetch live data without an access token
+        spot_price = 25000
+
+        with open('NSE_FO.json', 'r') as f:
+            all_options = json.load(f)
+
+        # Filter options by expiry date
+        expiry_datetime = datetime.strptime(EXPIRY_DATE, '%Y-%m-%d')
+        filtered_options = [
+            opt for opt in all_options
+            if datetime.fromtimestamp(opt['expiry'] / 1000).date() == expiry_datetime.date()
+        ]
+
+        if not filtered_options:
+            print(f"No options found for expiry date {EXPIRY_DATE}. Skipping poll.")
             await asyncio.sleep(POLLING_INTERVAL)
             continue
 
-        if not ACCESS_TOKEN or not EXPIRY_DATE:
-            print("Access token or expiry date not set. Skipping poll.")
-            await asyncio.sleep(POLLING_INTERVAL)
-            continue
-
-        option_chain = upstox_api.get_option_chain(nifty_key, EXPIRY_DATE, ACCESS_TOKEN)
-        if not option_chain or 'data' not in option_chain:
-            print("Could not get option chain. Skipping poll.")
-            await asyncio.sleep(POLLING_INTERVAL)
-            continue
-
-        spot_price = option_chain['data'][0].get('underlying_spot_price')
-        if not spot_price:
-            print("Could not determine spot price. Skipping poll.")
-            await asyncio.sleep(POLLING_INTERVAL)
-            continue
+        # Get all unique strikes and sort them
+        all_strikes = sorted(list(set(opt['strike_price'] for opt in filtered_options)))
 
         # Find ATM strike
-        atm_strike = min(option_chain['data'], key=lambda x: abs(x['strike_price'] - spot_price))
-
-        # Get all strikes and sort them
-        all_strikes = sorted([item['strike_price'] for item in option_chain['data']])
-        atm_strike_index = all_strikes.index(atm_strike['strike_price'])
+        atm_strike = min(all_strikes, key=lambda x: abs(x - spot_price))
+        atm_strike_index = all_strikes.index(atm_strike)
 
         # Select 5 strikes above and 5 below
         start_index = max(0, atm_strike_index - 5)
         end_index = min(len(all_strikes), atm_strike_index + 6)
         selected_strikes = all_strikes[start_index:end_index]
 
-        option_data_to_save = []
-        for item in option_chain['data']:
-            if item['strike_price'] in selected_strikes:
-                # Call option
-                if 'call_options' in item and item['call_options']:
-                    call_data = item['call_options']['market_data']
+        db = database.SessionLocal()
+        try:
+            option_data_to_save = []
+            for strike in selected_strikes:
+                # Find the CE and PE options for the current strike
+                ce_option = next((opt for opt in filtered_options if opt['strike_price'] == strike and opt['instrument_type'] == 'CE'), None)
+                pe_option = next((opt for opt in filtered_options if opt['strike_price'] == strike and opt['instrument_type'] == 'PE'), None)
+
+                if ce_option:
+                    prev_oi = crud.get_previous_oi(db, ce_option['instrument_key'])
+                    current_oi = random.randint(1000, 100000)
                     option_data_to_save.append(models.OptionData(
-                        instrument_key=item['call_options']['instrument_key'],
-                        strike_price=item['strike_price'],
+                        instrument_key=ce_option['instrument_key'],
+                        strike_price=ce_option['strike_price'],
                         option_type='CE',
-                        ltp=call_data.get('ltp', 0),
-                        oi=call_data.get('oi', 0),
-                        change_in_oi=call_data.get('oi', 0) - call_data.get('prev_oi', 0)
+                        ltp=random.randint(1, 500),
+                        oi=current_oi,
+                        change_in_oi=current_oi - prev_oi if prev_oi is not None else 0
                     ))
-                # Put option
-                if 'put_options' in item and item['put_options']:
-                    put_data = item['put_options']['market_data']
+                if pe_option:
+                    prev_oi = crud.get_previous_oi(db, pe_option['instrument_key'])
+                    current_oi = random.randint(1000, 100000)
                     option_data_to_save.append(models.OptionData(
-                        instrument_key=item['put_options']['instrument_key'],
-                        strike_price=item['strike_price'],
+                        instrument_key=pe_option['instrument_key'],
+                        strike_price=pe_option['strike_price'],
                         option_type='PE',
-                        ltp=put_data.get('ltp', 0),
-                        oi=put_data.get('oi', 0),
-                        change_in_oi=put_data.get('oi', 0) - put_data.get('prev_oi', 0)
+                        ltp=random.randint(1, 500),
+                        oi=current_oi,
+                        change_in_oi=current_oi - prev_oi if prev_oi is not None else 0
                     ))
 
-        if option_data_to_save:
-            db = database.SessionLocal()
-            crud.save_option_data(db, option_data_to_save)
+            if option_data_to_save:
+                crud.save_option_data(db, option_data_to_save)
+                print(f"Saved {len(option_data_to_save)} records to the database.")
+        finally:
             db.close()
-            print(f"Saved {len(option_data_to_save)} records to the database.")
 
         await asyncio.sleep(POLLING_INTERVAL)
 
@@ -109,16 +110,6 @@ async def startup_event():
 def read_root():
     return {"message": "Welcome to the OI Watcher API"}
 
-@app.get("/nifty-instrument-key")
-def get_nifty_key():
-    """
-    An endpoint to test the retrieval of the Nifty 50 instrument key.
-    """
-    nifty_key = upstox_api.get_nifty_50_instrument_key()
-    if nifty_key:
-        return {"instrument_key": nifty_key}
-    else:
-        return {"error": "Could not retrieve Nifty 50 instrument key"}
 
 @app.get("/api/v1/option-data")
 def get_option_data(db: Session = Depends(get_db)):

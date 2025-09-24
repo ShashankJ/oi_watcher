@@ -18,3 +18,12 @@ def get_latest_option_data(db: Session):
     if latest_timestamp:
         return db.query(models.OptionData).filter(models.OptionData.timestamp == latest_timestamp[0]).all()
     return []
+
+def get_previous_oi(db: Session, instrument_key: str):
+    """
+    Retrieves the most recent OI for a given instrument key, to calculate the change.
+    """
+    latest_record = db.query(models.OptionData).filter(models.OptionData.instrument_key == instrument_key).order_by(models.OptionData.timestamp.desc()).first()
+    if latest_record:
+        return latest_record.oi
+    return None
