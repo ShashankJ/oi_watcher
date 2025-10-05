@@ -5,6 +5,7 @@ import OiChart from './components/OiChart';
 import Pcr from './components/Pcr';
 import SupportResistanceSection from './components/SupportResistanceSection';
 import NiftyPrice from './components/NiftyPrice';
+import StochasticRsi from './components/StochasticRsi';
 import './App.css';
 
 function App() {
@@ -39,7 +40,8 @@ function App() {
         {error && <p className="error">{error}</p>}
         {data && !data.error ? (
           <>
-            <NiftyPrice value={data["Nifty Price"]}/>
+            <NiftyPrice value={data['Nifty Price']} />
+            <StochasticRsi />
             <Pcr value={data.pcr} />
             <OiChart data={data} />
             <OptionTable data={data} />

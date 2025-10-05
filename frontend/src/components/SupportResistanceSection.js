@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const intervals = [
-  { label: "5 Minutes", interval: 5, unit: "minutes" },
   { label: "15 Minutes", interval: 15, unit: "minutes" },
+  { label: "30 Minutes", interval: 30, unit: "minutes" },
   { label: "1 Day", interval: 1, unit: "days" }
 ];
 
