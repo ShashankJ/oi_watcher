@@ -3,6 +3,8 @@ import axios from 'axios';
 import OptionTable from './components/OptionTable';
 import OiChart from './components/OiChart';
 import Pcr from './components/Pcr';
+import SupportResistanceSection from './components/SupportResistanceSection';
+import NiftyPrice from './components/NiftyPrice';
 import './App.css';
 
 function App() {
@@ -12,7 +14,8 @@ function App() {
   const fetchData = async () => {
     try {
       // The proxy in package.json will forward this request to the backend
-      const response = await axios.get('/api/v1/option-data');
+      //const response = await axios.get('/api/v1/option-data');
+      const response = await axios.get('/api/oi_data');
       setData(response.data);
       setError(null);
     } catch (err) {
@@ -36,9 +39,11 @@ function App() {
         {error && <p className="error">{error}</p>}
         {data && !data.error ? (
           <>
+            <NiftyPrice value={data["Nifty Price"]}/>
             <Pcr value={data.pcr} />
-            <OiChart data={data.oi_chart_data} />
-            <OptionTable data={data.contracts} />
+            <OiChart data={data} />
+            <OptionTable data={data} />
+            <SupportResistanceSection />
           </>
         ) : (
           <p>{data ? data.error : 'Loading...'}</p>

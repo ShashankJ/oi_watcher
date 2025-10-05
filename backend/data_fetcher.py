@@ -1,5 +1,7 @@
-import requests
+import datetime
+import upstox_client
 import json
+
 
 def get_instrument_key(symbol, expiry_date, strike_price=None, option_type=None):
     """
@@ -21,29 +23,35 @@ def get_instrument_key(symbol, expiry_date, strike_price=None, option_type=None)
                         return instrument['instrument_key']
     return None
 
+
 def fetch_intraday_data(instrument_key):
     """
-    Fetches intraday candle data for a given instrument key.
+    Fetches intraday candle data for a given instrument key using upstox_client.
+    If no intraday candles are returned, fetches historical data for the previous 6 days and returns the latest day's data.
     """
-    url = f"https://api.upstox.com/v2/historical-candle/intraday/{instrument_key}/1minute"
-    headers = {
-        'Accept': 'application/json'
-    }
-
+    api = upstox_client.HistoryV3Api()
+    today = datetime.datetime.today()
+    start_date = today.strftime('%Y-%m-%d')
     try:
-        response = requests.get(url, headers=headers)
-        print(f"Status Code: {response.status_code}")
-        print(f"Response Body: {response.text}")
-
-        if response.status_code == 200:
-            print("Successfully fetched data without authentication.")
-            return response.json()
-        else:
-            print("Failed to fetch data. Authentication might be required.")
-            return None
-    except requests.exceptions.RequestException as e:
+        # Try intraday first
+        intraday = api.get_intra_day_candle_data(instrument_key, 'minutes', 5)
+        candles = getattr(getattr(intraday, 'data', None), 'candles', [])
+        if candles:
+            return {'data': {'candles': candles}}
+        # If no intraday data, fallback to historical for last 6 days
+        hist_start = (today - datetime.timedelta(days=6)).strftime('%Y-%m-%d')
+        hist = api.get_historical_candle_data1(instrument_key, 'minutes', 5, start_date, hist_start)
+        hist_candles = getattr(getattr(hist, 'data', None), 'candles', [])
+        if hist_candles:
+            latest_date = hist_candles[0][0].split('T')[0]
+            # Return only the latest day's candle as a 2D array for compatibility
+            hist_candle_filtered = [c for c in hist_candles if c[0].startswith(latest_date)]
+            return {'data': {'candles': hist_candle_filtered}}
+        return {'data': {'candles': []}}
+    except Exception as e:
         print(f"An error occurred: {e}")
-        return None
+        return {'data': {'candles': []}}
+
 
 def get_nifty_50_price():
     """
@@ -52,13 +60,20 @@ def get_nifty_50_price():
     # For the purpose of this script, we will simulate fetching the Nifty 50 price.
     # In a real application, you would use an API to get the live price.
     # We will use a static value for now, as the historical API does not provide a direct way to get the latest price.
-    return 25000.0  # Simulated Nifty 50 price
+    today_date = datetime.datetime.today().strftime('%Y-%m-%d')
+    days_interval = 7
+    start_date = (datetime.datetime.today() - datetime.timedelta(days=days_interval)).strftime('%Y-%m-%d')
+    history_client = upstox_client.HistoryV3Api()
+    nifty_data = history_client.get_historical_candle_data1('NSE_INDEX|Nifty 50', 'days', 1, today_date, start_date)
+    latest_candle = nifty_data.data.candles[0]
+    return latest_candle[4]  # Return the closing price of the latest candle
+
 
 def select_option_contracts(nifty_price):
     """
     Selects 5 call and 5 put option contracts above and below the Nifty 50 price.
     """
-    with open('NSE_FO.json', 'r') as f:
+    with open('../NSE_FO.json', 'r') as f:
         data = json.load(f)
 
     # Filter for Nifty options and get the nearest expiry date
@@ -99,6 +114,7 @@ def select_option_contracts(nifty_price):
     selected_puts = sorted([p for p in puts if p['strike_price'] < nifty_price], key=lambda x: x['strike_price'], reverse=True)[:5]
 
     return selected_calls, selected_puts
+
 
 def process_oi_data(options):
     """
