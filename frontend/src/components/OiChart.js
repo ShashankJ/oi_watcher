@@ -2,6 +2,10 @@ import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const OiChart = ({ data }) => {
+  if (!Array.isArray(data) || data.length === 0) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div style={{ width: '100%', height: 400 }}>
       <h2>OI Change Comparison</h2>
