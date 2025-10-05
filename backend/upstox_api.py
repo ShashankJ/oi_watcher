@@ -5,8 +5,12 @@ import io
 from functools import lru_cache
 import numpy as np
 import datetime
+from logger_config import get_logger
 
 INSTRUMENTS_URL = "https://assets.upstox.com/market-quote/instruments/exchange/NSE.json.gz"
+
+# Get logger instance
+logger = get_logger(__name__)
 
 @lru_cache(maxsize=1)
 def get_nifty_50_instrument_key():
@@ -26,14 +30,16 @@ def get_nifty_50_instrument_key():
             if (instrument.get('name') == 'Nifty 50' and
                 instrument.get('instrument_type') == 'INDEX' and
                 instrument.get('segment') == 'NSE_INDEX'):
+                logger.info("Found Nifty 50 instrument key")
                 return instrument.get('instrument_key')
 
+        logger.error("Nifty 50 instrument key not found")
         return None
     except requests.exceptions.RequestException as e:
-        print(f"Error downloading instruments file: {e}")
+        logger.error(f"Error downloading instruments file: {e}")
         return None
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
         return None
 
 
@@ -44,10 +50,12 @@ def fetch_nifty50_5m_candles():
     fallback to historical data for previous 6 days and get latest day data.
     Returns: list of dicts with 'close' prices and 'timestamp'.
     """
+    logger.info("Fetching 5-minute candles for Nifty 50")
     # This is a placeholder. Replace with actual upstox_client usage.
     # Simulate intraday API returning zero candles
     candles = []
     if not candles:
+        logger.warning("Intraday API returned zero candles, falling back to historical data")
         # Fallback: fetch historical data for previous 6 days
         # Simulate 6 days of 5-min candles (e.g., 78 candles per day)
         now = datetime.datetime.now()
@@ -61,6 +69,7 @@ def fetch_nifty50_5m_candles():
         # Get only the latest day's candles
         latest_day = max(c['timestamp'][:10] for c in candles)
         candles = [c for c in candles if c['timestamp'].startswith(latest_day)]
+    logger.info(f"Fetched {len(candles)} candles for latest day")
     return candles
 
 
@@ -70,6 +79,6 @@ if __name__ == '__main__':
     # Example usage
     nifty_key = get_nifty_50_instrument_key()
     if nifty_key:
-        print(f"Nifty 50 Instrument Key: {nifty_key}")
+        logger.info(f"Nifty 50 Instrument Key: {nifty_key}")
     else:
-        print("Could not retrieve Nifty 50 instrument key.")
+        logger.error("Could not retrieve Nifty 50 instrument key.")

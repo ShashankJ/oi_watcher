@@ -1,9 +1,13 @@
 from flask import Flask, jsonify, request
+from logger_config import get_logger
 
 from backend.data_fetcher import fetch_intraday_data_without_filter
 from data_fetcher import get_nifty_50_price, select_option_contracts, process_oi_data
 from find_support_resistance_niftyfifty_daily import get_support_resistance
 from indicator_utils import calculate_stochrsi
+
+# Get logger instance
+logger = get_logger(__name__)
 
 app = Flask(__name__)
 
