@@ -10,12 +10,16 @@ import crud
 from decouple import config
 from fastapi.middleware.cors import CORSMiddleware
 from upstox_api import fetch_nifty50_5m_candles, calculate_stochrsi
+from logger_config import get_logger
 
 app = FastAPI()
 
 # Configuration
 EXPIRY_DATE = config('EXPIRY_DATE')
 POLLING_INTERVAL = config('POLLING_INTERVAL', default=300, cast=int)
+
+# Get logger instance
+logger = get_logger(__name__)
 
 # Enable CORS for frontend
 app.add_middleware(
@@ -41,7 +45,7 @@ async def poll_data():
     The background task that polls data and stores it in the database.
     """
     while True:
-        print("Polling data...")
+        logger.info("Polling data...")
         # Hardcoded spot price as we cannot fetch live data without an access token
         spot_price = 25000
 
@@ -56,7 +60,7 @@ async def poll_data():
         ]
 
         if not filtered_options:
-            print(f"No options found for expiry date {EXPIRY_DATE}. Skipping poll.")
+            logger.warning(f"No options found for expiry date {EXPIRY_DATE}. Skipping poll.")
             await asyncio.sleep(POLLING_INTERVAL)
             continue
 
@@ -105,7 +109,7 @@ async def poll_data():
 
             if option_data_to_save:
                 crud.save_option_data(db, option_data_to_save)
-                print(f"Saved {len(option_data_to_save)} records to the database.")
+                logger.info(f"Saved {len(option_data_to_save)} records to the database.")
         finally:
             db.close()
 
@@ -167,4 +171,24 @@ def get_option_data(db: Session = Depends(get_db)):
     }
 
 
-
+@app.get("/stochrsi_nifty50_5m")
+def get_stochrsi_nifty50_5m():
+    logger.info("/stochrsi_nifty50_5m endpoint called")
+    candles = fetch_nifty50_5m_candles()
+    logger.info(f"Fetched {len(candles)} candles for Nifty 50 5m")
+    stochrsi = calculate_stochrsi(candles)
+    if stochrsi is None:
+        logger.error("Not enough data to calculate Stochastic RSI")
+        return {"error": "Not enough data to calculate Stochastic RSI"}
+    # Analysis
+    if stochrsi > 0.8:
+        analysis = "Overbought: Possible reversal"
+    elif stochrsi < 0.2:
+        analysis = "Oversold: Possible reversal"
+    else:
+        analysis = "Neutral"
+    logger.info(f"Stochastic RSI: {stochrsi:.2f}, Analysis: {analysis}")
+    return {
+        "stochrsi": stochrsi,
+        "analysis": analysis
+    }
