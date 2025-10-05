@@ -53,6 +53,35 @@ def fetch_intraday_data(instrument_key):
         return {'data': {'candles': []}}
 
 
+def fetch_intraday_data_without_filter(instrument_key):
+    """
+    Fetches intraday candle data for a given instrument key using upstox_client.
+    If no intraday candles are returned, fetches historical data for the previous 6 days and returns the latest day's data.
+    """
+    api = upstox_client.HistoryV3Api()
+    today = datetime.datetime.today()
+    start_date = today.strftime('%Y-%m-%d')
+    interval = 5
+    unit = 'minutes'
+    try:
+        # Try intraday first
+        intraday = api.get_intra_day_candle_data(instrument_key, unit, interval)
+        candles = getattr(getattr(intraday, 'data', None), 'candles', [])
+        if candles:
+            return {'data': {'candles': candles}}
+        # If no intraday data, fallback to historical for last 6 days
+        hist_start = (today - datetime.timedelta(days=6)).strftime('%Y-%m-%d')
+        hist = api.get_historical_candle_data1(instrument_key, 'minutes', 5, start_date, hist_start)
+        hist_candles = getattr(getattr(hist, 'data', None), 'candles', [])
+        if hist_candles:
+            return {'data': {'candles': hist_candles}}
+        return {'data': {'candles': []}}
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return {'data': {'candles': []}}
+
+
+
 def get_nifty_50_price():
     """
     Fetches the latest price of Nifty 50.

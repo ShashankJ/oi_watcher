@@ -8,12 +8,23 @@ import database
 import models
 import crud
 from decouple import config
+from fastapi.middleware.cors import CORSMiddleware
+from upstox_api import fetch_nifty50_5m_candles, calculate_stochrsi
 
 app = FastAPI()
 
 # Configuration
 EXPIRY_DATE = config('EXPIRY_DATE')
 POLLING_INTERVAL = config('POLLING_INTERVAL', default=300, cast=int)
+
+# Enable CORS for frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Create the database and tables on startup
 database.create_db_and_tables()
@@ -154,3 +165,6 @@ def get_option_data(db: Session = Depends(get_db)):
         "oi_chart_data": chart_data,
         "pcr": pcr
     }
+
+
+

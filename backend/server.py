@@ -1,6 +1,9 @@
 from flask import Flask, jsonify, request
+
+from backend.data_fetcher import fetch_intraday_data_without_filter
 from data_fetcher import get_nifty_50_price, select_option_contracts, process_oi_data
 from find_support_resistance_niftyfifty_daily import get_support_resistance
+from indicator_utils import calculate_stochrsi
 
 app = Flask(__name__)
 
@@ -44,6 +47,25 @@ def support_resistance():
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+
+@app.get("/stochrsi_nifty50_5m")
+def get_stochrsi_nifty50_5m():
+    candles = fetch_intraday_data_without_filter('NSE_INDEX|Nifty 50')
+    stochrsi = calculate_stochrsi(candles)
+    if stochrsi is None:
+        return {"error": "Not enough data to calculate Stochastic RSI"}
+    # Analysis
+    if stochrsi > 0.8:
+        analysis = "Overbought: Possible reversal"
+    elif stochrsi < 0.2:
+        analysis = "Oversold: Possible reversal"
+    else:
+        analysis = "Neutral"
+    return {
+        "stochrsi": stochrsi,
+        "analysis": analysis
+    }
 
 
 if __name__ == '__main__':
