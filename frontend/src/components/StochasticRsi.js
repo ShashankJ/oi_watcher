@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const StochasticRsi = () => {
   const [data, setData] = useState(null);
@@ -8,24 +9,18 @@ const StochasticRsi = () => {
   useEffect(() => {
     let intervalId;
 
-    const fetchData = () => {
+    const fetchData = async () => {
       setLoading(true);
-      fetch('http://localhost:5000/stochrsi_nifty50_5m')
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error(`API error: ${res.status}`);
-          }
-          return res.json();
-        })
-        .then((result) => {
-          setData(result);
-          setLoading(false);
-          console.log('Stochastic RSI API response:', result);
-        })
-        .catch((err) => {
-          setError('Failed to fetch Stochastic RSI 14: ' + err.message);
-          setLoading(false);
-        });
+      try {
+        const response = await axios.get(`/stochrsi_nifty50_5m`);
+        setData(response.data);
+        setError(null);
+        console.log('Stochastic RSI API response:', response.data);
+      } catch (err) {
+        setError('Failed to fetch Stochastic RSI 14: ' + err.message);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchData(); // Initial fetch
@@ -33,10 +28,6 @@ const StochasticRsi = () => {
 
     return () => clearInterval(intervalId); // Cleanup on unmount
   }, []);
-
-  // ...rest of your component remains unchanged
-};
-
 
   return (
     <div style={{ marginTop: 24, border: '1px solid #ccc', borderRadius: 8, padding: 16, maxWidth: 400 }}>
