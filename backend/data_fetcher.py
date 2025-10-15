@@ -117,7 +117,11 @@ def get_nifty_50_price():
         days_interval = 7
         start_date = (datetime.datetime.today() - datetime.timedelta(days=days_interval)).strftime('%Y-%m-%d')
         history_client = upstox_client.HistoryV3Api()
-        nifty_data = history_client.get_historical_candle_data1('NSE_INDEX|Nifty 50', 'days', 1, today_date, start_date)
+        nifty_data = history_client.get_intra_day_candle_data('NSE_INDEX|Nifty 50', 'minutes', 5)
+        if nifty_data.data.candles:
+            logger.info("Found intraday candles for Nifty 50")
+        else:
+            nifty_data = history_client.get_historical_candle_data1('NSE_INDEX|Nifty 50', 'days', 1, today_date, start_date)
         latest_candle = nifty_data.data.candles[0]
         price = latest_candle[4]  # Return the closing price of the latest candle
         logger.info(f"Nifty 50 price: {price}")

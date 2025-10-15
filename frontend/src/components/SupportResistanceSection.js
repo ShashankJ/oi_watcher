@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const intervals = [
-  { label: "15 Minutes", interval: 15, unit: "minutes" },
-  { label: "30 Minutes", interval: 30, unit: "minutes" },
-  { label: "1 Day", interval: 1, unit: "days" }
+  { label: "15 Minutes", interval: 15, unit: "minute" },
+  { label: "30 Minutes", interval: 30, unit: "minute" },
+  { label: "1 Day", interval: 1, unit: "day" }
 ];
 
 function SRTable({ title, data }) {
