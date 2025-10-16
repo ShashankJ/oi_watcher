@@ -27,14 +27,14 @@ function App() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 5000); // Poll every 5 seconds
+    const interval = setInterval(fetchData, 30000); // Poll every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="App">
       <header className="App-header">
-        <h1>OI Watcher</h1>
+        <h1>Trillionaires (S&A) Formula</h1>
       </header>
       <main>
         {error && <p className="error">{error}</p>}
