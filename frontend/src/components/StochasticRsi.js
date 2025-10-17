@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress } from '@mui/material';
 
 const StochasticRsi = () => {
   const [data, setData] = useState(null);
@@ -31,33 +32,39 @@ const StochasticRsi = () => {
 
   return (
     <div style={{ marginTop: 24, border: '1px solid #ccc', borderRadius: 8, padding: 16, maxWidth: 400 }}>
-      <h2>Stochastic RSI (Nifty 50, 5m)</h2>
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <Typography component="h2" variant="h6" color="primary" gutterBottom>
+        Stochastic RSI (Nifty 50, 5m)
+      </Typography>
+      {loading && <CircularProgress />}
+      {error && <Typography color="error">{error}</Typography>}
       {data && !data.error && (
         <>
-          <h3>{data.stochrsi !== undefined ? data.stochrsi.toFixed(2) : 'N/A'}</h3>
-          <p>{data.analysis}</p>
-          <table style={{ width: '100%', marginTop: 12, borderCollapse: 'collapse' }}>
-            <tbody>
-              <tr>
-                <td style={{ fontWeight: 'bold', padding: '4px 8px', border: '1px solid #eee' }}>K</td>
-                <td style={{ padding: '4px 8px', border: '1px solid #eee' }}>{data.k}</td>
-              </tr>
-              <tr>
-                <td style={{ fontWeight: 'bold', padding: '4px 8px', border: '1px solid #eee' }}>D</td>
-                <td style={{ padding: '4px 8px', border: '1px solid #eee' }}>{data.d}</td>
-              </tr>
-              <tr>
-                <td style={{ fontWeight: 'bold', padding: '4px 8px', border: '1px solid #eee' }}>Signal</td>
-                <td style={{ padding: '4px 8px', border: '1px solid #eee' }}>{data.signal}</td>
-              </tr>
-              <tr>
-                <td style={{ fontWeight: 'bold', padding: '4px 8px', border: '1px solid #eee' }}>Timestamp</td>
-                <td style={{ padding: '4px 8px', border: '1px solid #eee' }}>{data.timestamp}</td>
-              </tr>
-            </tbody>
-          </table>
+          <Typography component="p" variant="h4">
+            {data.stochrsi !== undefined ? data.stochrsi.toFixed(2) : 'N/A'}
+          </Typography>
+          <Typography gutterBottom>{data.analysis}</Typography>
+          <TableContainer component={Paper} sx={{ mt: 2 }}>
+            <Table size="small">
+              <TableBody>
+                <TableRow>
+                  <TableCell><strong>K</strong></TableCell>
+                  <TableCell>{data.k}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><strong>D</strong></TableCell>
+                  <TableCell>{data.d}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><strong>Signal</strong></TableCell>
+                  <TableCell>{data.signal}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><strong>Timestamp</strong></TableCell>
+                  <TableCell>{data.timestamp}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
         </>
       )}
       {data && data.error && <p style={{ color: 'red' }}>{data.error}</p>}

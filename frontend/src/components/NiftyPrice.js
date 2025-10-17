@@ -1,11 +1,16 @@
 import React from 'react';
+import { Typography } from '@mui/material';
 
 const NiftyPrice = ({ value }) => {
   return (
-    <div>
-      <h2>Nifty Current Price</h2>
-      <h3>{value ? value.toFixed(2) : 'N/A'}</h3>
-    </div>
+    <>
+      <Typography component="h2" variant="h6" color="primary" gutterBottom>
+        Nifty Current Price
+      </Typography>
+      <Typography component="p" variant="h4">
+        {value ? value.toFixed(2) : 'N/A'}
+      </Typography>
+    </>
   );
 };
 

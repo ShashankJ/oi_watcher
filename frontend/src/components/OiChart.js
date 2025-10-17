@@ -1,5 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { Typography } from '@mui/material';
 
 const OiChart = ({ data }) => {
   // Better error handling
@@ -22,7 +23,9 @@ const OiChart = ({ data }) => {
 
   return (
     <div style={{ width: '100%', height: 400 }}>
-      <h2>OI Change Comparison</h2>
+      <Typography component="h2" variant="h6" color="primary" gutterBottom>
+        OI Change Comparison
+      </Typography>
       <ResponsiveContainer>
         <BarChart
           data={chartData}

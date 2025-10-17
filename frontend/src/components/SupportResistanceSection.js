@@ -1,63 +1,102 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import {
+  Grid,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress,
+  Box,
+} from "@mui/material";
 
 const intervals = [
+  { label: "5 Minutes", interval: 5, unit: "minute" },
   { label: "15 Minutes", interval: 15, unit: "minute" },
-  { label: "30 Minutes", interval: 30, unit: "minute" },
-  { label: "1 Day", interval: 1, unit: "day" }
+  { label: "1 Day", interval: 1, unit: "day" },
 ];
 
 function SRTable({ title, data }) {
-  if (!data || data.length === 0) return <div>No data</div>;
+  if (!data || data.length === 0) return <Typography>No data</Typography>;
   return (
-    <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 180, maxWidth: 300, marginBottom: '0.5em', background: '#fafbfc' }}>
-      <thead>
-        <tr>
-          <th style={{ border: '1px solid #ccc', padding: '4px' }}>Date</th>
-          <th style={{ border: '1px solid #ccc', padding: '4px' }}>{title}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {data.map(([date, value], idx) => (
-          <tr key={idx}>
-            <td style={{ border: '1px solid #ccc', padding: '4px' }}>{new Date(date).toLocaleDateString()}</td>
-            <td style={{ border: '1px solid #ccc', padding: '4px' }}>{value}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <TableContainer component={Paper}>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Date</TableCell>
+            <TableCell>{title}</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {data.map(([date, value], idx) => (
+            <TableRow key={idx}>
+              <TableCell>{new Date(date).toLocaleDateString()}</TableCell>
+              <TableCell>{value}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
 
 export default function SupportResistanceSection() {
   const [results, setResults] = useState({});
+  const [loading, setLoading] = useState({});
+  const [error, setError] = useState({});
 
   useEffect(() => {
     intervals.forEach(({ label, interval, unit }) => {
-      axios.get(`/support_resistance?interval=${interval}&unit=${unit}`)
-        .then(res => {
-          setResults(prev => ({ ...prev, [label]: res.data }));
+      setLoading((prev) => ({ ...prev, [label]: true }));
+      axios
+        .get(`/support_resistance?interval=${interval}&unit=${unit}`)
+        .then((res) => {
+          setResults((prev) => ({ ...prev, [label]: res.data }));
+          setLoading((prev) => ({ ...prev, [label]: false }));
+        })
+        .catch((err) => {
+          setError((prev) => ({ ...prev, [label]: "Failed to fetch" }));
+          setLoading((prev) => ({ ...prev, [label]: false }));
         });
     });
   }, []);
 
   return (
-    <div>
-      <h2>Support & Resistance</h2>
-      {intervals.map(({ label }) => (
-        <div key={label} style={{marginBottom: '1em'}}>
-          <h3>{label}</h3>
-          {results[label] ? (
-            <div style={{ display: 'flex', gap: '2em', alignItems: 'flex-start' }}>
-              <SRTable title="Support" data={results[label].supports} />
-              <SRTable title="Resistance" data={results[label].resistances} />
-              <div style={{ alignSelf: 'center', marginLeft: 16 }}><b>Trade Zone:</b> {results[label].trade_zone}</div>
-            </div>
-          ) : (
-            <div>Loading...</div>
-          )}
-        </div>
-      ))}
-    </div>
+    <Box>
+      <Typography variant="h5" gutterBottom>
+        Support & Resistance
+      </Typography>
+      <Grid container spacing={3}>
+        {intervals.map(({ label }) => (
+          <Grid item xs={12} md={6} lg={4} key={label}>
+            <Typography variant="h6">{label}</Typography>
+            {loading[label] && <CircularProgress />}
+            {error[label] && <Typography color="error">{error[label]}</Typography>}
+            {results[label] && (
+              <Box>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <SRTable title="Support" data={results[label].supports} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <SRTable
+                      title="Resistance"
+                      data={results[label].resistances}
+                    />
+                  </Grid>
+                </Grid>
+                <Typography variant="body1" sx={{ mt: 2 }}>
+                  <strong>Trade Zone:</strong> {results[label].trade_zone}
+                </Typography>
+              </Box>
+            )}
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
   );
 }
