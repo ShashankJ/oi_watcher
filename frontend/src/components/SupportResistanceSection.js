@@ -92,7 +92,7 @@ export default function SupportResistanceSection() {
                   </Grid>
                 </details>
                 <Typography variant="body1" sx={{ mt: 2 }}>
-                  <strong>Trade Zone:</strong> {results[label].trade_zone}
+                  <strong>Trade Zone:</strong> <strong>{results[label].trade_zone}</strong>
                 </Typography>
               </Box>
             )}
