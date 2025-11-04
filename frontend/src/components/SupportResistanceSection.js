@@ -78,17 +78,19 @@ export default function SupportResistanceSection() {
             {error[label] && <Typography color="error">{error[label]}</Typography>}
             {results[label] && (
               <Box>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <SRTable title="Support" data={results[label].supports} />
+               <details style={{ marginTop: 8 }}>
+                  <summary style={{ cursor: "pointer", outline: "none" }} aria-expanded="false">
+                    Show / Hide Support & Resistance
+                  </summary>
+                  <Grid container spacing={2} sx={{ mt: 1 }}>
+                    <Grid item xs={12} sm={6}>
+                      <SRTable title="Support" data={results[label].supports} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <SRTable title="Resistance" data={results[label].resistances} />
+                    </Grid>
                   </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <SRTable
-                      title="Resistance"
-                      data={results[label].resistances}
-                    />
-                  </Grid>
-                </Grid>
+                </details>
                 <Typography variant="body1" sx={{ mt: 2 }}>
                   <strong>Trade Zone:</strong> {results[label].trade_zone}
                 </Typography>

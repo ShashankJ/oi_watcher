@@ -52,12 +52,6 @@ const Dashboard = () => {
                             <Pcr value={data.pcr} />
                         </Paper>
                     </Grid>
-                    {/* OI Chart */}
-                    <Grid item xs={12}>
-                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                            <OiChart data={data} />
-                        </Paper>
-                    </Grid>
                     {/* Option Table */}
                     <Grid item xs={12}>
                         <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
@@ -68,6 +62,12 @@ const Dashboard = () => {
                     <Grid item xs={12}>
                         <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
                             <SupportResistanceSection />
+                        </Paper>
+                    </Grid>
+                    {/* OI Chart */}
+                    <Grid item xs={12}>
+                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+                            <OiChart data={data} />
                         </Paper>
                     </Grid>
                 </Grid>
