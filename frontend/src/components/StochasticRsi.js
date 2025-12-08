@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import axios from '../config/axios';
 import { Typography, Box, Table, TableBody, TableCell, TableContainer, TableRow, Paper, CircularProgress, Collapse, IconButton } from '@mui/material';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
@@ -18,7 +18,7 @@ const StochasticRsi = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`/stochrsi_nifty50_5m`);
+        const response = await axios.get(`/api/stochrsi_nifty50_5m`);
         setData(response.data);
         setError(null);
         console.log('Stochastic RSI API response:', response.data);

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState, useCallback } from "react";
+import axios from "../config/axios";
 import {
   Grid,
   Typography,
@@ -15,8 +15,8 @@ import {
 } from "@mui/material";
 
 const intervals = [
-  { label: "5 Minutes", interval: 5, unit: "minute" },
   { label: "15 Minutes", interval: 15, unit: "minute" },
+  { label: "30 Minutes", interval: 30, unit: "minute" },
   { label: "1 Day", interval: 1, unit: "day" },
 ];
 
@@ -49,21 +49,32 @@ export default function SupportResistanceSection() {
   const [loading, setLoading] = useState({});
   const [error, setError] = useState({});
 
-  useEffect(() => {
+  const fetchData = useCallback(() => {
     intervals.forEach(({ label, interval, unit }) => {
       setLoading((prev) => ({ ...prev, [label]: true }));
       axios
-        .get(`/support_resistance?interval=${interval}&unit=${unit}`)
+        .get(`/api/support_resistance?interval=${interval}&unit=${unit}`)
         .then((res) => {
           setResults((prev) => ({ ...prev, [label]: res.data }));
           setLoading((prev) => ({ ...prev, [label]: false }));
+          setError((prev) => ({ ...prev, [label]: null }));
         })
-        .catch((err) => {
+        .catch(() => {
           setError((prev) => ({ ...prev, [label]: "Failed to fetch" }));
           setLoading((prev) => ({ ...prev, [label]: false }));
         });
     });
   }, []);
+
+  useEffect(() => {
+    fetchData(); // Initial fetch
+
+    const intervalId = setInterval(() => {
+      fetchData();
+    }, 60000); // Refresh every x seconds
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [fetchData]);
 
   return (
     <Box>

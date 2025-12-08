@@ -1,8 +1,8 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from logger_config import get_logger
 
-from backend.data_fetcher import fetch_intraday_data_without_filter
-from data_fetcher import get_nifty_50_price, select_option_contracts, process_oi_data
+from data_fetcher import fetch_intraday_data_without_filter, get_nifty_50_price, select_option_contracts, process_oi_data
 from find_support_resistance_niftyfifty_daily import get_support_resistance
 from indicator_utils import calculate_stochrsi
 
@@ -10,6 +10,7 @@ from indicator_utils import calculate_stochrsi
 logger = get_logger(__name__)
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 
 @app.route('/api/oi_data', methods=['GET'])
@@ -70,6 +71,69 @@ def get_stochrsi_nifty50_5m():
         "stochrsi": stochrsi,
         "analysis": analysis
     }
+
+
+@app.route('/api/nifty_curr', methods=['GET'])
+def get_nifty_current():
+    """
+    Get current Nifty price with change and change percentage from previous day
+    """
+    try:
+        # Fetch intraday candles for Nifty 50
+        candles = fetch_intraday_data_without_filter('NSE_INDEX|Nifty 50')
+
+        if not candles or len(candles) < 2:
+            return jsonify({'error': 'Not enough data available'}), 400
+
+        # Latest candle (most recent)
+        latest_candle = candles[0]
+        ltp = latest_candle[4]  # Close price
+
+        # Get previous day's close (first candle of today vs last candle of yesterday)
+        # Assuming candles are sorted with newest first
+        previous_close = candles[-1][4]  # Close price of oldest candle (previous day close)
+
+        # Calculate change and change percentage
+        change = ltp - previous_close
+        change_percent = (change / previous_close) * 100 if previous_close != 0 else 0
+
+        logger.info(f"Nifty current: LTP={ltp}, Change={change}, Change%={change_percent}")
+
+        return jsonify({
+            "ltp": round(ltp, 2),
+            "change": round(change, 2),
+            "change_percent": round(change_percent, 2)
+        })
+    except Exception as e:
+        logger.error(f"Error fetching Nifty current price: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/nifty_previous_day', methods=['GET'])
+def get_nifty_previous_day():
+    """
+    Get previous day OHLC data for Nifty 50
+    """
+    try:
+        candles = fetch_intraday_data_without_filter('NSE_INDEX|Nifty 50')
+
+        if not candles or len(candles) < 2:
+            return jsonify({'error': 'Not enough data available'}), 400
+
+        # Get yesterday's candle (assuming daily data or aggregate from intraday)
+        # For simplicity, using the oldest available candle as reference
+        prev_candle = candles[-1]
+
+        return jsonify({
+            "date": prev_candle[0],  # Timestamp
+            "open": round(prev_candle[1], 2),
+            "high": round(prev_candle[2], 2),
+            "low": round(prev_candle[3], 2),
+            "close": round(prev_candle[4], 2)
+        })
+    except Exception as e:
+        logger.error(f"Error fetching previous day OHLC: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':

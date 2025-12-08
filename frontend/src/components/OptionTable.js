@@ -33,7 +33,7 @@ function OptionTable({data}) {
     }
 
     return (
-        <Box>
+        <Box sx={{maxWidth: 600, margin: 'auto'}}>
             <Typography variant="h6" gutterBottom component="div">
                 OI Change Table
             </Typography>

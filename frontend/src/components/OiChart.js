@@ -50,7 +50,7 @@ const OiChart = ({data}) => {
                     <XAxis dataKey="strike"/>
                     <YAxis/>
                     <Tooltip
-                        formatter={(value, name) => [`${value}`, name === "call_oi_change" ? "Call OI Change" : "Put OI Change"]}
+                        formatter={(value, name) => [`${value}`, name === "Call OI Change" ? "Call OI Change" : "Put OI Change"]}
                         labelFormatter={(label) => `Strike: ${label}`}
                     />
                     <Legend/>
