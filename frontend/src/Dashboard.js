@@ -18,7 +18,7 @@ const Dashboard = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('/api/oi_data');
+            const response = await axios.get('/api/oi_pcr');
             setData(response.data);
             setError(null);
             setLastUpdateTime(new Date().toLocaleTimeString());
