@@ -8,6 +8,7 @@ import StochasticRsi from './components/StochasticRsi';
 import OiChart from './components/OiChart';
 import OptionTable from './components/OptionTable';
 import SupportResistanceSection from './components/SupportResistanceSection';
+import AlgoSignals from './components/AlgoSignals';
 
 const Dashboard = () => {
     const [data, setData] = useState(null);
@@ -47,7 +48,7 @@ const Dashboard = () => {
     }, []);
 
     return (
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
             {/* Connection Status Bar */}
             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h4">OI Watcher Dashboard</Typography>
@@ -93,47 +94,58 @@ const Dashboard = () => {
             {/* Main Content */}
             {data && !data.error ? (
                 <Grid container spacing={3}>
-                    {/* Nifty Price */}
-                    <Grid item xs={12} md={4} lg={3}>
-                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                            <NiftyPrice />
-                        </Paper>
+                    {/* Left/Main Column */}
+                    <Grid item xs={12} lg={9}>
+                        <Grid container spacing={3}>
+                            {/* Nifty Price */}
+                            <Grid item xs={12} md={4} lg={4}>
+                                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                    <NiftyPrice />
+                                </Paper>
+                            </Grid>
+                            {/* PCR */}
+                            <Grid item xs={12} md={4} lg={4}>
+                                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                    <Pcr value={data.pcr} />
+                                </Paper>
+                            </Grid>
+                            {/* Previous Day OHLC */}
+                            <Grid item xs={12} md={4} lg={4}>
+                                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                    <OptionTable data={data} />
+                                </Paper>
+                            </Grid>
+                            {/* Option Table */}
+                            <Grid item xs={12} md={8} lg={8}>
+                                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                   <NiftyPreviousDay />
+                                </Paper>
+                            </Grid>
+                            {/* Stochastic RSI */}
+                            <Grid item xs={12} md={4} lg={4}>
+                                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                    <StochasticRsi />
+                                </Paper>
+                            </Grid>
+                            {/* Support and Resistance */}
+                            <Grid item xs={12}>
+                                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+                                    <SupportResistanceSection />
+                                </Paper>
+                            </Grid>
+                            {/* OI Chart */}
+                            <Grid item xs={12}>
+                                <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+                                    <OiChart data={data} />
+                                </Paper>
+                            </Grid>
+                        </Grid>
                     </Grid>
-                     {/* PCR */}
-                    <Grid item xs={12} md={4} lg={3}>
-                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                            <Pcr value={data.pcr} />
-                        </Paper>
-                    </Grid>
-                    {/* Option Table */}
-                    <Grid item xs={12} md={6} lg={5}>
-                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                            <OptionTable data={data} />
-                        </Paper>
-                    </Grid>
-                    {/* Previous Day OHLC */}
-                    <Grid item xs={12} md={4} lg={3}>
-                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                            <NiftyPreviousDay />
-                        </Paper>
-                    </Grid>
-                    {/* Stochastic RSI */}
-                    <Grid item xs={12} md={4} lg={3}>
-                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                            <StochasticRsi />
-                        </Paper>
-                    </Grid>
-                    {/* Support and Resistance */}
-                    <Grid item xs={12}>
-                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                            <SupportResistanceSection />
-                        </Paper>
-                    </Grid>
-                    {/* OI Chart */}
-                    <Grid item xs={12}>
-                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                            <OiChart data={data} />
-                        </Paper>
+                    {/* Right Panel for Algo Signals */}
+                    <Grid item xs={12} lg={3}>
+                        <Box sx={{ position: 'sticky', top: 16 }}>
+                            <AlgoSignals />
+                        </Box>
                     </Grid>
                 </Grid>
             ) : (
