@@ -55,6 +55,15 @@ const AlgoSignals = () => {
         return <Chip label={s} color={color} size="small" />;
     };
 
+    const getBackgroundColor = (trend, signal) => {
+        if (!trend || typeof trend !== 'string') return '#f5f5f5'; // light gray for no trend or invalid
+        const t = trend.toUpperCase();
+        const s = signal ? signal.toUpperCase() : '';
+        if (t === 'UP' && (s === 'HOLD' || s === 'BUY')) return '#e8f5e8'; // light green
+        if (t === 'DOWN' && (s === 'SELL' || s === 'HOLD')) return '#ffebee'; // light red
+        return '#f5f5f5'; // default light gray
+    };
+
     const formatKey = (key) => {
         return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     };
@@ -111,12 +120,14 @@ const AlgoSignals = () => {
             {algorithms.map((algoName) => {
                 const algoData = data[algoName];
                 const signal = algoData.signal || algoData.Signal;
+                const trend = algoData.trend;
+                console.log('Algo Data:', signal, trend);
 
                 return (
                     <Accordion key={algoName} disableGutters elevation={0} sx={{ '&:before': { display: 'none' }, borderBottom: '1px solid #eee' }}>
                         <AccordionSummary
                             expandIcon={<ExpandMoreIcon />}
-                            sx={{ px: 1 }}
+                            sx={{ px: 1, bgcolor: getBackgroundColor(trend, signal) }}
                         >
                             <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between', pr: 2 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
