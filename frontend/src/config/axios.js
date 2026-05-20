@@ -1,8 +1,26 @@
 import axios from 'axios';
 
+// Determine base URL based on environment:
+// - If REACT_APP_API_URL is set (local dev), use it
+// - If running on localhost, use http://localhost:5000 (dev mode)
+// - Otherwise, use relative path '/' (Docker container with nginx proxy)
+const getBaseURL = () => {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // In browser, check if we're on localhost
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return 'http://localhost:5000';
+  }
+  
+  // Default to relative path (works with nginx reverse-proxy)
+  return '/';
+};
+
 // Create an axios instance with base URL from environment variable
 const axiosInstance = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000',
+  baseURL: getBaseURL(),
   timeout: 60000, // 60 seconds timeout (backend may take time to fetch data)
   headers: {
     'Content-Type': 'application/json',
