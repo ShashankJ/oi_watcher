@@ -1,0 +1,1 @@
+tailscale serve --http 80 localhost:3000

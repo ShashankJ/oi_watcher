@@ -107,7 +107,7 @@ const AlgoSignals = () => {
     const timestamp = data?.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A';
 
     return (
-        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%', position: 'sticky', top: 16 }}>
+        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
             <Box sx={{ mb: 2 }}>
                 <Typography variant="h6" color="primary" gutterBottom>
                     Algo Signals

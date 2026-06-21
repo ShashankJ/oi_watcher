@@ -9,6 +9,7 @@ import OiChart from './components/OiChart';
 import OptionTable from './components/OptionTable';
 import SupportResistanceSection from './components/SupportResistanceSection';
 import AlgoSignals from './components/AlgoSignals';
+import TradingSignals from './components/TradingSignals';
 
 const Dashboard = () => {
     const [data, setData] = useState(null);
@@ -141,10 +142,19 @@ const Dashboard = () => {
                             </Grid>
                         </Grid>
                     </Grid>
-                    {/* Right Panel for Algo Signals */}
+                    {/* Right Panel for Signals */}
                     <Grid item xs={12} lg={3}>
-                        <Box sx={{ position: 'sticky', top: 16 }}>
+                        <Box
+                            sx={{
+                                position: { xs: 'static', lg: 'sticky' },
+                                top: 16,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 2
+                            }}
+                        >
                             <AlgoSignals />
+                            <TradingSignals />
                         </Box>
                     </Grid>
                 </Grid>
